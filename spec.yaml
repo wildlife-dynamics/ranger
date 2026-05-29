@@ -431,11 +431,14 @@ workflow:
     type: task-group
     description: "Patrol tracks (uniform) overlaid with event points (by type)."
     tasks:
+      # Source from events_with_reporter (not extract_reported_by) so events
+      # with no reporter ("None") are dropped from the map too, matching the
+      # leaderboard. filter_df is a row mask, so geometry is preserved.
       - name: Filter Event Locations
         id: events_filter
         task: apply_reloc_coord_filter
         partial:
-          df: ${{ workflow.extract_reported_by.return }}
+          df: ${{ workflow.events_with_reporter.return }}
           roi_gdf: null
           roi_name: null
           reset_index: true

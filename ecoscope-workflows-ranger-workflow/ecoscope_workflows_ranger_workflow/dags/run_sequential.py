@@ -902,7 +902,7 @@ def main(params: Params):
             unpack_depth=1,
         )
         .partial(
-            df=extract_reported_by,
+            df=events_with_reporter,
             roi_gdf=None,
             roi_name=None,
             reset_index=True,
