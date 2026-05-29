@@ -26,7 +26,7 @@ rjsf-overrides:
       - url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
         opacity: 0.5
   uiSchema:
-    events_filter.filter_point_coords.items.ui:options.label: false
+    Patrols & Events Map.events_filter.filter_point_coords.items.ui:options.label: false
 
 task-instance-defaults:
   skipif:
@@ -65,6 +65,10 @@ workflow:
       time_range: ${{ workflow.time_range.return }}
       include_patrol_details: true
       raise_on_empty: false
+      # Bind here (not user-facing): the advanced `sub_page_size` integer
+      # defaults to null, which renders as an empty/invalid number input in the
+      # Desktop rjsf form and silently blocks Submit. null = client default.
+      sub_page_size: null
 
   - name: Get Events
     id: events_data
@@ -95,6 +99,15 @@ workflow:
     task: set_string_var
     partial:
       var: "Patrols & Events Map"
+
+  # Top-level (not inside the map task-group) so it surfaces as a top-level
+  # rjsf property and stays in uiSchema ui:order — matches patrols/
+  # encounter-rate/subject-tracking. Nesting it in the group produced a
+  # phantom top-level `base_map_defs` absent from ui:order, which makes the
+  # Desktop rjsf form fail to render.
+  - name: Map Base Layers
+    id: base_map_defs
+    task: set_base_maps
 
   # ---------- Process Patrols ----------
   - title: Process Patrols
@@ -182,6 +195,20 @@ workflow:
           output_type: str
           output_column_name: reported_by_name
 
+      # Events with no reporter serialize to the string "None" (not NaN, so a
+      # groupby wouldn't drop them) and otherwise surface as a bogus "None"
+      # ranger on the leaderboard. Drop them here; true-NaN reporters are
+      # additionally dropped by summarize_df's groupby.
+      - name: Drop Events Without a Reporter
+        id: events_with_reporter
+        task: filter_df
+        partial:
+          df: ${{ workflow.extract_reported_by.return }}
+          column_name: reported_by_name
+          op: ne
+          value: "None"
+          reset_index: true
+
   # ---------- Leaderboard ----------
   - title: Ranger Leaderboard
     type: task-group
@@ -222,13 +249,11 @@ workflow:
             patrol_subject: Ranger
           raise_if_not_found: true
 
-      # groupby(reported_by_name) drops null-reporter rows (pandas dropna=True),
-      # so events without a reporter never become a leaderboard ranger row.
       - name: Summarize Events per Reporter
         id: event_summary
         task: summarize_df
         partial:
-          df: ${{ workflow.extract_reported_by.return }}
+          df: ${{ workflow.events_with_reporter.return }}
           groupby_cols: ["reported_by_name"]
           summary_params:
             - display_name: "Event Count"
@@ -406,10 +431,6 @@ workflow:
     type: task-group
     description: "Patrol tracks (uniform) overlaid with event points (by type)."
     tasks:
-      - name: Map Base Layers
-        id: base_map_defs
-        task: set_base_maps
-
       - name: Filter Event Locations
         id: events_filter
         task: apply_reloc_coord_filter

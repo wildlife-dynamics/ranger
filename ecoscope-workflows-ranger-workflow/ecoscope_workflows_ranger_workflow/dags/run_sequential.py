@@ -60,6 +60,7 @@ from ecoscope.platform.tasks.transformation import (
 from ecoscope.platform.tasks.transformation import (
     extract_value_from_json_column as extract_value_from_json_column,
 )
+from ecoscope.platform.tasks.transformation import filter_df as filter_df
 from ecoscope.platform.tasks.transformation import map_columns as map_columns
 from ecoscope.platform.tasks.transformation import sort_values as sort_values
 from ecoscope.platform.tasks.transformation import with_unit as with_unit
@@ -162,6 +163,7 @@ def main(params: Params):
             time_range=time_range,
             include_patrol_details=True,
             raise_on_empty=False,
+            sub_page_size=None,
             **(params_dict.get("patrol_obs") or {}),
         )
         .call()
@@ -233,6 +235,23 @@ def main(params: Params):
             unpack_depth=1,
         )
         .partial(var="Patrols & Events Map", **(params_dict.get("set_map_title") or {}))
+        .call()
+    )
+
+    base_map_defs = (
+        task(set_base_maps)
+        .validate()
+        .set_task_instance_id("base_map_defs")
+        .handle_errors()
+        .with_tracing()
+        .skipif(
+            conditions=[
+                any_is_empty_df,
+                any_dependency_skipped,
+            ],
+            unpack_depth=1,
+        )
+        .partial(**(params_dict.get("base_map_defs") or {}))
         .call()
     )
 
@@ -388,6 +407,30 @@ def main(params: Params):
         .call()
     )
 
+    events_with_reporter = (
+        task(filter_df)
+        .validate()
+        .set_task_instance_id("events_with_reporter")
+        .handle_errors()
+        .with_tracing()
+        .skipif(
+            conditions=[
+                any_is_empty_df,
+                any_dependency_skipped,
+            ],
+            unpack_depth=1,
+        )
+        .partial(
+            df=extract_reported_by,
+            column_name="reported_by_name",
+            op="ne",
+            value="None",
+            reset_index=True,
+            **(params_dict.get("events_with_reporter") or {}),
+        )
+        .call()
+    )
+
     patrol_summary = (
         task(summarize_df)
         .validate()
@@ -471,7 +514,7 @@ def main(params: Params):
             unpack_depth=1,
         )
         .partial(
-            df=extract_reported_by,
+            df=events_with_reporter,
             groupby_cols=["reported_by_name"],
             summary_params=[
                 {"display_name": "Event Count", "aggregator": "count", "column": "id"}
@@ -842,23 +885,6 @@ def main(params: Params):
             decimal_places=0,
             **(params_dict.get("total_events_sv") or {}),
         )
-        .call()
-    )
-
-    base_map_defs = (
-        task(set_base_maps)
-        .validate()
-        .set_task_instance_id("base_map_defs")
-        .handle_errors()
-        .with_tracing()
-        .skipif(
-            conditions=[
-                any_is_empty_df,
-                any_dependency_skipped,
-            ],
-            unpack_depth=1,
-        )
-        .partial(**(params_dict.get("base_map_defs") or {}))
         .call()
     )
 

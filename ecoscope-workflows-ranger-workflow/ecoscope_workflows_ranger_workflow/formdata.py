@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, List, Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, confloat, constr
 
@@ -38,11 +38,6 @@ class PatrolObs(BaseModel):
         ["done"],
         description="Choose to analyze patrols with a certain status. If left empty, patrols of all status will be analyzed",
         title="Patrol Status",
-    )
-    sub_page_size: Optional[int] = Field(
-        None,
-        description="        Manually set the page size for underlying ER API requests.\n        If left as None, this will use the underlying client default value (4000)\n        ",
-        title="Sub Page Size",
     )
     patrols_overlap_daterange: Optional[bool] = Field(
         True,
@@ -236,7 +231,7 @@ class BaseMapDefs(BaseModel):
         [
             {
                 "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-                "opacity": 1,
+                "opacity": 1.0,
             },
             {
                 "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -246,19 +241,6 @@ class BaseMapDefs(BaseModel):
         description="Select tile layers to use as base layers in map outputs. The first layer in the list will be the bottommost layer displayed.",
         title=" ",
     )
-
-
-class BaseMapDefs1(BaseModel):
-    base_maps: Optional[Any] = [
-        {
-            "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-            "opacity": 1.0,
-        },
-        {
-            "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-            "opacity": 0.5,
-        },
-    ]
 
 
 class EarthRangerConnection(BaseModel):
@@ -366,7 +348,6 @@ class EventsFilter(BaseModel):
 
 
 class PatrolsEventsMap(BaseModel):
-    base_map_defs: Optional[BaseMapDefs] = Field(None, title="Map Base Layers")
     events_filter: Optional[EventsFilter] = Field(None, title="Filter Event Locations")
 
 
@@ -385,6 +366,7 @@ class FormData(BaseModel):
     )
     patrol_obs: Optional[PatrolObs] = Field(None, title="Get Patrol Observations")
     events_data: Optional[EventsData] = Field(None, title="Get Events")
+    base_map_defs: Optional[BaseMapDefs] = Field(None, title="Map Base Layers")
     Process_Patrols: Optional[ProcessPatrols] = Field(
         None,
         alias="Process Patrols",
@@ -395,4 +377,3 @@ class FormData(BaseModel):
         alias="Patrols & Events Map",
         description="Patrol tracks (uniform) overlaid with event points (by type).",
     )
-    base_map_defs: Optional[BaseMapDefs1] = None

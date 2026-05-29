@@ -39,11 +39,6 @@ class PatrolObs(BaseModel):
         description="Choose to analyze patrols with a certain status. If left empty, patrols of all status will be analyzed",
         title="Patrol Status",
     )
-    sub_page_size: Optional[int] = Field(
-        None,
-        description="        Manually set the page size for underlying ER API requests.\n        If left as None, this will use the underlying client default value (4000)\n        ",
-        title="Sub Page Size",
-    )
     patrols_overlap_daterange: Optional[bool] = Field(
         True,
         description="Whether or not to include patrols that start or end outside of the time range",
@@ -363,6 +358,6 @@ class Params(BaseModel):
     )
     patrol_obs: Optional[PatrolObs] = Field(None, title="Get Patrol Observations")
     events_data: Optional[EventsData] = Field(None, title="Get Events")
-    patrol_traj: Optional[PatrolTraj] = Field(None, title="Relocations to Trajectory")
     base_map_defs: Optional[BaseMapDefs] = Field(None, title="Map Base Layers")
+    patrol_traj: Optional[PatrolTraj] = Field(None, title="Relocations to Trajectory")
     events_filter: Optional[EventsFilter] = Field(None, title="Filter Event Locations")

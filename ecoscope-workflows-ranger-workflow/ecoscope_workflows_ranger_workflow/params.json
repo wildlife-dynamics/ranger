@@ -98,13 +98,6 @@
           "uniqueItems": true,
           "ecoscope:advanced": true
         },
-        "sub_page_size": {
-          "default": null,
-          "title": "Sub Page Size",
-          "type": "integer",
-          "description": "        Manually set the page size for underlying ER API requests.\n        If left as None, this will use the underlying client default value (4000)\n        ",
-          "ecoscope:advanced": true
-        },
         "patrols_overlap_daterange": {
           "default": true,
           "title": "Patrols Overlap Daterange",
@@ -164,32 +157,6 @@
       ],
       "type": "object",
       "title": "Get Events"
-    },
-    "patrol_traj": {
-      "additionalProperties": false,
-      "properties": {
-        "trajectory_segment_filter": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/TrajectorySegmentFilter"
-            }
-          ],
-          "default": {
-            "min_length_meters": 0.001,
-            "max_length_meters": 100000,
-            "min_time_secs": 1,
-            "max_time_secs": 172800,
-            "min_speed_kmhr": 0.01,
-            "max_speed_kmhr": 500
-          },
-          "title": " ",
-          "description": "Filter track data by setting limits on track segment length, duration, and speed. Segments outside these bounds are removed, reducing noise and to focus on meaningful movement patterns.",
-          "ecoscope:advanced": true
-        }
-      },
-      "required": [],
-      "type": "object",
-      "title": "Relocations to Trajectory"
     },
     "base_map_defs": {
       "additionalProperties": false,
@@ -398,6 +365,32 @@
       "required": [],
       "title": "Map Base Layers"
     },
+    "patrol_traj": {
+      "additionalProperties": false,
+      "properties": {
+        "trajectory_segment_filter": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/TrajectorySegmentFilter"
+            }
+          ],
+          "default": {
+            "min_length_meters": 0.001,
+            "max_length_meters": 100000,
+            "min_time_secs": 1,
+            "max_time_secs": 172800,
+            "min_speed_kmhr": 0.01,
+            "max_speed_kmhr": 500
+          },
+          "title": " ",
+          "description": "Filter track data by setting limits on track segment length, duration, and speed. Segments outside these bounds are removed, reducing noise and to focus on meaningful movement patterns.",
+          "ecoscope:advanced": true
+        }
+      },
+      "required": [],
+      "type": "object",
+      "title": "Relocations to Trajectory"
+    },
     "events_filter": {
       "additionalProperties": false,
       "properties": {
@@ -592,7 +585,6 @@
       "ui:order": [
         "patrol_types",
         "status",
-        "sub_page_size",
         "patrols_overlap_daterange"
       ]
     },
@@ -617,8 +609,8 @@
       "time_range",
       "patrol_obs",
       "events_data",
-      "patrol_traj",
       "base_map_defs",
+      "patrol_traj",
       "events_filter"
     ]
   },
